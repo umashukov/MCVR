@@ -11,18 +11,17 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install Dependencies
+      - name: Install Vulkan SDK
         run: |
-          # Устанавливаем всё необходимое через vcpkg
-          vcpkg install vulkan:x64-windows glslang:x64-windows
+          # Скачиваем и устанавливаем официальный SDK через прямой вызов
+          # Это установит все нужные утилиты (включая glslangValidator) в C:\VulkanSDK
+          $installer = "VulkanSDK-Installer.exe"
+          Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/1.3.296.0/windows/VulkanSDK-1.3.296.0-Installer.exe" -OutFile $installer
+          Start-Process -FilePath $installer -ArgumentList "/S" -Wait
           
-          # Находим путь к инструментам glslang (там лежит glslangValidator.exe)
-          $vcpkgRoot = $env:VCPKG_INSTALLATION_ROOT
-          $glslangBin = "$vcpkgRoot\installed\x64-windows\tools\glslang"
-          
-          # Добавляем в PATH
-          echo "$glslangBin" >> $env:GITHUB_PATH
-          echo "VULKAN_SDK=$vcpkgRoot\installed\x64-windows" >> $env:GITHUB_ENV
+          # Явно добавляем путь к папке Bin в PATH для текущего процесса
+          echo "C:\VulkanSDK\1.3.296.0\Bin" >> $env:GITHUB_PATH
+          echo "VULKAN_SDK=C:\VulkanSDK\1.3.296.0" >> $env:GITHUB_ENV
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -31,8 +30,7 @@ jobs:
         run: |
           cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
           -DJAVA_PROJECT_ROOT_DIR="$env:GITHUB_WORKSPACE" `
-          -DMCVR_ENABLE_NRD=ON -DUSE_AMD=ON `
-          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+          -DMCVR_ENABLE_NRD=ON -DUSE_AMD=ON
 
       - name: Build Release
         run: cmake --build build -j --config Release
