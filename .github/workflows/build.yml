@@ -11,35 +11,23 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Cache Vulkan SDK
-        id: cache-vulkan
-        uses: actions/cache@v4
-        with:
-          path: C:\VulkanSDK
-          key: vulkan-sdk-1.3.296
-
-      - name: Install Vulkan SDK
-        if: steps.cache-vulkan.outputs.cache-hit != 'true'
-        run: |
-          Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/1.3.296.0/windows/VulkanSDK-1.3.296.0-Installer.exe" -OutFile "Vulkan.exe"
-          Start-Process -FilePath ".\Vulkan.exe" -ArgumentList "/S" -Wait
-          
-      - name: Set Environment
-        run: |
-          echo "VULKAN_SDK=C:\VulkanSDK\1.3.296.0" >> $env:GITHUB_ENV
-          echo "C:\VulkanSDK\1.3.296.0\Bin" >> $env:GITHUB_PATH
-
       - name: Configure CMake
         run: |
+          # Используем системный vcpkg, который уже есть на Windows-2022
+          # Он содержит Vulkan и другие нужные библиотеки
           cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
           -DJAVA_PROJECT_ROOT_DIR="$env:GITHUB_WORKSPACE" `
-          -DMCVR_ENABLE_NRD=ON -DUSE_AMD=ON
+          -DMCVR_ENABLE_NRD=ON -DUSE_AMD=ON `
+          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
 
-      - name: Build
+      - name: Build Release
         run: cmake --build build -j --config Release
+
+      - name: Install
+        run: cmake --install build --config Release --prefix ./dist
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: MCVR-Build
-          path: build/bin # Или путь, куда у тебя компилируется результат
+          path: ./dist
