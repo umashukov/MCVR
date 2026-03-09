@@ -13,11 +13,14 @@ jobs:
 
       - name: Configure CMake
         run: |
-          # Используем системный vcpkg, который уже есть на Windows-2022
-          # Он содержит Vulkan и другие нужные библиотеки
+          # Вычисляем путь к Vulkan внутри vcpkg
+          $vulkanPath = "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows"
+          
           cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
           -DJAVA_PROJECT_ROOT_DIR="$env:GITHUB_WORKSPACE" `
           -DMCVR_ENABLE_NRD=ON -DUSE_AMD=ON `
+          -DVulkan_INCLUDE_DIR="$vulkanPath/include" `
+          -DVulkan_LIBRARY="$vulkanPath/lib/vulkan-1.lib" `
           -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build Release
