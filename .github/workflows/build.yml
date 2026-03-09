@@ -13,16 +13,9 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Устанавливаем vulkan и glslang (он содержит glslangValidator)
-          vcpkg install vulkan:x64-windows glslang:x64-windows
-          
-          # Находим путь к установленным бинарникам
-          $vcpkgRoot = $env:VCPKG_INSTALLATION_ROOT
-          $binPath = "$vcpkgRoot\installed\x64-windows\tools\glslang"
-          
-          # Добавляем этот путь в PATH, чтобы MSBuild его увидел
-          echo "$binPath" >> $env:GITHUB_PATH
-          echo "VULKAN_SDK=$vcpkgRoot\installed\x64-windows" >> $env:GITHUB_ENV
+          vcpkg install vulkan:x64-windows
+          choco install glslang -y
+          echo "C:\VulkanSDK\1.3.296.0\Bin" >> $env:GITHUB_PATH
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
