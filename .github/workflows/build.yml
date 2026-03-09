@@ -1,0 +1,34 @@
+name: Build MCVR
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout MCVR
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Configure CMake
+        run: |
+          # В GitHub Actions папка проекта доступна по пути $env:GITHUB_WORKSPACE
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
+          -DJAVA_PROJECT_ROOT_DIR="$env:GITHUB_WORKSPACE" `
+          -DMCVR_ENABLE_NRD=ON -DUSE_AMD=ON
+
+      - name: Build Release
+        run: cmake --build build -j --config Release
+
+      - name: Install (Prepare Artifacts)
+        run: cmake --install build --config Release --prefix ./dist
+
+      - name: Upload Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: MCVR-Build-Windows
+          path: ./dist
