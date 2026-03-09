@@ -11,12 +11,15 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install Vulkan SDK
+        run: choco install vulkan-sdk -y
+
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
       - name: Configure CMake
         run: |
-          # В GitHub Actions папка проекта доступна по пути $env:GITHUB_WORKSPACE
+          # Указываем CMake путь к Vulkan (он ставится в системную папку через choco)
           cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
           -DJAVA_PROJECT_ROOT_DIR="$env:GITHUB_WORKSPACE" `
           -DMCVR_ENABLE_NRD=ON -DUSE_AMD=ON
