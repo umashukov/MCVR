@@ -13,10 +13,16 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Используем vcpkg для быстрой установки Vulkan
-          vcpkg install vulkan:x64-windows
-          # Указываем путь к vcpkg, чтобы CMake его нашел
-          echo "VULKAN_SDK=$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows" >> $env:GITHUB_ENV
+          # Устанавливаем vulkan и glslang (он содержит glslangValidator)
+          vcpkg install vulkan:x64-windows glslang:x64-windows
+          
+          # Находим путь к установленным бинарникам
+          $vcpkgRoot = $env:VCPKG_INSTALLATION_ROOT
+          $binPath = "$vcpkgRoot\installed\x64-windows\tools\glslang"
+          
+          # Добавляем этот путь в PATH, чтобы MSBuild его увидел
+          echo "$binPath" >> $env:GITHUB_PATH
+          echo "VULKAN_SDK=$vcpkgRoot\installed\x64-windows" >> $env:GITHUB_ENV
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
